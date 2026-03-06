@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nikhil Bejjarapu | Cybersecurity Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #0d0d0f;
+  --bg2:      #111318;
+  --surface:  #161a22;
+  --surface2: #1c2030;
+  --border:   #2a3045;
+  --kblue:    #00b4ff;
+  --kblue2:   #0080cc;
+  --kcyan:    #00e5cc;
+  --kgreen:   #39ff8a;
+  --kpurple:  #7b5ea7;
+  --kred:     #ff3b5c;
+  --kyellow:  #ffd166;
+  --text:     #e8eaf0;
+  --text-mid: #a8b2c8;
+  --text-dim: #5a6480;
+  --prompt-u: #39ff8a;
+  --prompt-h: #00b4ff;
+  --prompt-p: #e8eaf0;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  font-family:'JetBrains Mono',monospace;
+  background:var(--bg);
+  color:var(--text);
+  height:100vh; overflow:hidden;
+  cursor:none;
+}
+
+/* ── 3D CANVAS BACKGROUND ── */
+#bg-canvas {
+  position:fixed; inset:0; z-index:0;
+  pointer-events:none;
+}
+
+/* scanline overlay */
+body::after {
+  content:'';
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+  );
+}
+
+/* vignette */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%);
+}
+
+/* ── CUSTOM CURSOR ── */
+.cursor {
+  position:fixed; width:32px; height:32px;
+  pointer-events:none; z-index:9999;
+  transform:translate(-50%,-50%);
+  animation:cursorPulse 2s ease-in-out infinite;
+}
+.cursor svg{width:100%;height:100%;}
+@keyframes cursorPulse {
+  0%,100%{filter:drop-shadow(0 0 4px var(--kblue));}
+  50%{filter:drop-shadow(0 0 10px var(--kblue)) drop-shadow(0 0 20px var(--kcyan));}
+}
+.cursor-ring {
+  position:fixed; width:50px; height:50px;
+  pointer-events:none; z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:all .12s ease; opacity:0.5;
+  animation:orbitSpin 3s linear infinite;
+}
+@keyframes orbitSpin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* ── BOOT ── */
+#boot {
+  position:fixed; inset:0; z-index:600;
+  background:#000;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+  padding:0 10vw; gap:4px; font-family:'Share Tech Mono',monospace;
+}
+.boot-line {
+  font-size:14px; color:#5a7a62;
+  opacity:0; transform:translateX(-8px);
+  animation:bSlide .28s forwards;
+  white-space:nowrap;
+}
+.boot-line .ok   { color:var(--kgreen); }
+.boot-line .warn { color:var(--kyellow); }
+.boot-line .err  { color:var(--kred); }
+.boot-line .info { color:var(--kblue); }
+.boot-logo {
+  font-family:'Share Tech Mono',monospace; font-size:15px; letter-spacing:2px;
+  color:var(--kblue); opacity:0; animation:bSlide .4s .02s forwards;
+  margin-bottom:8px;
+  text-shadow:0 0 12px var(--kblue);
+}
+.boot-bar-wrap {
+  margin-top:16px; width:420px; max-width:80vw;
+  opacity:0; animation:bSlide .3s 2.5s forwards;
+}
+.boot-bar-label { font-size:12px; color:var(--text-dim); margin-bottom:4px; }
+.boot-bar {
+  height:3px; background:#1a1a2e; border-radius:2px; overflow:hidden;
+}
+.boot-fill {
+  height:100%; width:0;
+  background:linear-gradient(90deg,var(--kblue2),var(--kblue),var(--kcyan));
+  animation:bFill 1.1s 2.6s ease forwards;
+  box-shadow:0 0 8px var(--kblue);
+}
+@keyframes bSlide{to{opacity:1;transform:translateX(0)}}
+@keyframes bFill {to{width:100%}}
+@keyframes bootOut{to{opacity:0;pointer-events:none;visibility:hidden}}
+#boot.done{animation:bootOut .5s 4.2s forwards;}
+
+/* ── LOCK OVERLAY ── */
+#lock-overlay {
+  position:fixed; inset:0; z-index:400;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none; opacity:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(4px);
+}
+#lock-overlay.active{pointer-events:all;}
+.lock-svg-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.lock-svg{width:96px;height:96px;}
+.lock-text {
+  font-family:'Share Tech Mono',monospace; font-size:13px; letter-spacing:4px;
+  color:var(--kblue); opacity:0;
+  text-shadow:0 0 12px var(--kblue);
+}
+@keyframes lockAppear {
+  0%  {opacity:0;transform:scale(.4) rotate(-15deg)}
+  60% {opacity:1;transform:scale(1.1) rotate(3deg)}
+  80% {transform:scale(.96)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes lockGlow {
+  0%,100%{filter:drop-shadow(0 0 8px var(--kblue));}
+  50%    {filter:drop-shadow(0 0 28px var(--kblue)) drop-shadow(0 0 50px var(--kcyan));}
+}
+@keyframes lockFadeOut {
+  0%  {opacity:1;transform:scale(1)}
+  55% {opacity:1;transform:scale(1.25);filter:brightness(3)}
+  100%{opacity:0;transform:scale(3)}
+}
+@keyframes labelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ripple */
+.ripple-ring {
+  position:fixed; border-radius:50%;
+  border:1.5px solid rgba(0,180,255,.5);
+  transform:translate(-50%,-50%) scale(0);
+  pointer-events:none; z-index:300;
+  animation:rippleOut .9s ease-out forwards;
+}
+@keyframes rippleOut{to{transform:translate(-50%,-50%) scale(8);opacity:0}}
+
+/* grid flash */
+.grid-flash {
+  position:fixed; inset:0; z-index:200; pointer-events:none;
+  background:rgba(0,180,255,.06); opacity:0;
+  animation:gridFlash .45s ease forwards;
+}
+@keyframes gridFlash{25%{opacity:1}100%{opacity:0}}
+
+/* ── TERMINAL ── */
+#terminal-wrap {
+  position:fixed; inset:0; display:flex; flex-direction:column;
+  opacity:0; animation:termIn .8s 4.5s forwards; z-index:3;
+}
+@keyframes termIn{from{opacity:0;transform:scale(.99)}to{opacity:1;transform:scale(1)}}
+
+/* titlebar — Kali style */
+.title-bar {
+  background:#1a1a2e;
+  border-bottom:1px solid #2a2a4a;
+  padding:8px 16px; display:flex; align-items:center; gap:12px; flex-shrink:0;
+  box-shadow:0 1px 0 rgba(0,180,255,.1);
+}
+.dots{display:flex;gap:7px;}
+.dot{width:13px;height:13px;border-radius:50%;}
+.dot.r{background:#ff5f57;} .dot.y{background:#febc2e;} .dot.g{background:#28c840;}
+.title-txt {
+  flex:1; text-align:center; font-size:12px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--text-dim);
+  font-family:'Share Tech Mono',monospace;
+}
+.status-pill {
+  font-size:10px; padding:3px 10px; border-radius:3px;
+  background:rgba(0,180,255,.08);
+  border:1px solid var(--kblue2); color:var(--kblue); letter-spacing:1px;
+  animation:pillPulse 2s infinite;
+  font-family:'Share Tech Mono',monospace;
+}
+@keyframes pillPulse{0%,100%{opacity:1;box-shadow:0 0 4px var(--kblue)}50%{opacity:.5;box-shadow:none}}
+
+/* output */
+#output {
+  flex:1; overflow-y:auto; padding:20px 28px;
+  scroll-behavior:smooth; position:relative; z-index:1;
+  background:transparent;
+}
+#output::-webkit-scrollbar{width:4px;}
+#output::-webkit-scrollbar-thumb{background:var(--kblue2);border-radius:2px;}
+
+/* input bar */
+.input-bar {
+  border-top:1px solid #1e2235;
+  background:#0f1018;
+  padding:12px 28px; display:flex; align-items:center; gap:8px; flex-shrink:0;
+}
+.prompt-label {
+  font-family:'Share Tech Mono',monospace;
+  font-size:15px; user-select:none; white-space:nowrap;
+}
+.prompt-user { color:var(--prompt-u); font-weight:700; }
+.prompt-at   { color:var(--text-mid); }
+.prompt-host { color:var(--prompt-h); font-weight:700; }
+.prompt-colon{ color:var(--text-mid); }
+.prompt-path { color:var(--kblue); }
+.prompt-sym  { color:var(--text); }
+#cmd-input {
+  flex:1; background:transparent; border:none; outline:none;
+  font-family:'JetBrains Mono',monospace; font-size:15px;
+  color:var(--text); caret-color:var(--kblue);
+}
+#cmd-input::placeholder{color:var(--text-dim);}
+
+/* ── OUTPUT LINES ── */
+.line {
+  font-size:15px; line-height:1.8;
+  opacity:0; animation:lineIn .2s forwards;
+}
+@keyframes lineIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+.line.cmd   { font-weight:700; margin-top:12px; color:var(--text); font-family:'Share Tech Mono',monospace; }
+.line.info  { color:var(--text); }
+.line.mid   { color:var(--text-mid); }
+.line.dim   { color:var(--text-mid); }
+.line.accent{ color:var(--kblue); }
+.line.warn  { color:var(--kyellow); }
+.line.err   { color:var(--kred); }
+.line.success{ color:var(--kgreen); font-weight:600; }
+.line.blank { height:10px; }
+.line.section-header {
+  font-family:'Share Tech Mono',monospace;
+  font-size:16px; font-weight:700; letter-spacing:3px; text-transform:uppercase;
+  margin-top:6px; margin-bottom:6px; padding-bottom:5px;
+  border-bottom:1px solid #2a3045;
+  color:var(--kblue);
+  text-shadow:0 0 10px rgba(0,180,255,.4);
+}
+
+/* ── HERO ── */
+.hero-card {
+  display:flex; gap:22px; align-items:flex-start;
+  padding:18px 20px;
+  background:rgba(22,26,34,.9);
+  border:1px solid #2a3045;
+  border-left:3px solid var(--kblue);
+  border-radius:4px; margin:10px 0;
+  box-shadow:0 0 24px rgba(0,180,255,.08), inset 0 0 30px rgba(0,180,255,.02);
+  opacity:0; animation:lineIn .45s .1s forwards;
+}
+.hero-avatar {
+  width:86px; height:86px; border-radius:6px;
+  border:2px solid var(--kblue);
+  background:linear-gradient(135deg,#0d1a2e,#1a2a1a);
+  flex-shrink:0; overflow:hidden; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 16px rgba(0,180,255,.3);
+}
+.hero-avatar::after {
+  content:'NB'; font-family:'Share Tech Mono',monospace;
+  font-size:26px; font-weight:700; color:var(--kblue); position:absolute;
+  text-shadow:0 0 10px var(--kblue);
+}
+.hero-avatar img{width:100%;height:100%;object-fit:cover;position:relative;z-index:1;}
+.hero-name {
+  font-family:'Share Tech Mono',monospace; font-size:20px; font-weight:700; letter-spacing:3px;
+  color:var(--kblue);
+  text-shadow:0 0 18px rgba(0,180,255,.6);
+  animation:nameGlow 3s ease-in-out infinite;
+}
+@keyframes nameGlow{0%,100%{text-shadow:0 0 14px rgba(0,180,255,.6)}50%{text-shadow:0 0 28px rgba(0,180,255,.9),0 0 50px rgba(0,229,204,.3)}}
+.hero-role { font-size:12px; letter-spacing:2px; color:var(--text-dim); margin:4px 0 8px; text-transform:uppercase; }
+.hero-meta { font-size:12px; color:var(--text-mid); margin-bottom:10px; }
+.hero-badges{display:flex;flex-wrap:wrap;gap:6px;}
+.badge {
+  font-size:11px; padding:3px 10px; border-radius:3px;
+  font-weight:600; letter-spacing:.5px; font-family:'Share Tech Mono',monospace;
+}
+.badge.b1{background:rgba(0,180,255,.08);color:var(--kblue);border:1px solid var(--kblue2);}
+.badge.b2{background:rgba(57,255,138,.06);color:var(--kgreen);border:1px solid rgba(57,255,138,.3);}
+.badge.b3{background:rgba(0,229,204,.06);color:var(--kcyan);border:1px solid rgba(0,229,204,.3);}
+.badge.b4{background:rgba(255,209,102,.06);color:var(--kyellow);border:1px solid rgba(255,209,102,.3);}
+
+/* ── CARDS ── */
+.card {
+  background:rgba(20,24,32,.9);
+  border:1px solid #2a3045;
+  border-left:2px solid var(--kblue2);
+  border-radius:4px; padding:14px 18px; margin:7px 0;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+  opacity:0; transition:border-color .2s,box-shadow .2s;
+}
+.card.anim{animation:cardIn .3s forwards;}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card:hover{border-left-color:var(--kblue);box-shadow:0 0 16px rgba(0,180,255,.12);}
+.card-title{font-size:15px;font-weight:700;color:var(--kblue);margin-bottom:3px;}
+.card-sub  {font-size:13px;color:var(--text-dim);margin-bottom:8px;}
+.card-body {font-size:14px;color:var(--text-mid);line-height:1.85;}
+.card-body li{list-style:none;padding-left:16px;position:relative;}
+.card-body li::before{content:'>';position:absolute;left:0;color:var(--kgreen);font-weight:700;}
+
+/* ── SKILL GRID ── */
+.skill-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:8px;margin:8px 0;opacity:0;animation:lineIn .4s forwards;
+}
+.skill-group{
+  background:rgba(20,24,32,.9);border:1px solid #2a3045;
+  border-radius:4px;padding:12px 14px;
+  transition:border-color .2s;
+}
+.skill-group:hover{border-color:var(--kblue2);}
+.skill-group-title{
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  font-weight:700;margin-bottom:7px;color:var(--kblue);
+}
+.skill-tag{display:inline-block;font-size:13px;color:var(--text-mid);margin:2px 4px 2px 0;}
+.skill-tag::before{content:'$ ';color:var(--kgreen);font-size:10px;}
+
+/* ── CMD TABLE ── */
+.cmd-table{margin:8px 0;}
+.cmd-row{
+  display:grid;grid-template-columns:160px 1fr;gap:8px;
+  padding:5px 0;border-bottom:1px solid #1e2235;
+  opacity:0;animation:lineIn .18s forwards;
+}
+.cmd-name{color:var(--kcyan);font-size:14px;font-weight:600;font-family:'Share Tech Mono',monospace;}
+.cmd-desc{color:var(--text-mid);font-size:14px;}
+
+/* ── CONTACT ── */
+.contact-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:8px;margin:8px 0;opacity:0;animation:lineIn .4s forwards;
+}
+.contact-item{
+  background:rgba(20,24,32,.9);border:1px solid #2a3045;
+  border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;
+}
+.contact-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+.contact-val  {font-size:13px;color:var(--kblue);font-weight:600;}
+
+/* ascii art */
+.ascii-art {
+  font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.3;white-space:pre;
+  color:var(--kblue);opacity:0;
+  text-shadow:0 0 8px rgba(0,180,255,.4);
+  animation:lineIn .5s .05s forwards, asciiGlow 4s ease-in-out infinite;
+}
+@keyframes asciiGlow{0%,100%{text-shadow:0 0 8px rgba(0,180,255,.4)}50%{text-shadow:0 0 18px rgba(0,180,255,.8),0 0 35px rgba(0,229,204,.2)}}
+
+@media(max-width:600px){
+  .hero-card{flex-direction:column;}
+  #output{padding:12px 14px;}
+  .input-bar{padding:10px 14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- 3D background canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- cursor -->
+<div class="cursor" id="cursor">
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="cg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#00b4ff"/>
+        <stop offset="1" stop-color="#00e5cc"/>
+      </linearGradient>
+    </defs>
+    <circle cx="16" cy="16" r="13" stroke="url(#cg)" stroke-width="1" stroke-dasharray="3 2" opacity=".6"/>
+    <line x1="16" y1="1"  x2="16" y2="8"  stroke="url(#cg)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="16" y1="24" x2="16" y2="31" stroke="url(#cg)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="1"  y1="16" x2="8"  y2="16" stroke="url(#cg)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="24" y1="16" x2="31" y2="16" stroke="url(#cg)" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="16" cy="16" r="4.5" stroke="url(#cg)" stroke-width="1" opacity=".9"/>
+    <circle cx="16" cy="16" r="1.8" fill="#00b4ff"/>
+  </svg>
+</div>
+<div class="cursor-ring" id="cring">
+  <svg viewBox="0 0 50 50" fill="none">
+    <circle cx="25" cy="25" r="22" stroke="#00b4ff" stroke-width=".8" stroke-dasharray="5 3" opacity=".4"/>
+    <circle cx="25" cy="3" r="2.5" fill="#00e5cc" opacity=".8"/>
+  </svg>
+</div>
+
+<!-- BOOT -->
+<div id="boot">
+  <div class="boot-logo">┌──(nikhil㉿kali)-[~]</div>
+  <div class="boot-line" style="animation-delay:.05s">Starting kernel...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">[ OK ]</span></div>
+  <div class="boot-line" style="animation-delay:.25s">Loading network stack TCP/IP...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">[ OK ]</span></div>
+  <div class="boot-line" style="animation-delay:.45s">Mounting encrypted volumes...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">[ OK ]</span></div>
+  <div class="boot-line" style="animation-delay:.65s">Starting Dynatrace APM agent...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="warn">[ ~~ ]</span></div>
+  <div class="boot-line" style="animation-delay:.85s">Initializing SIEM bridge...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">[ OK ]</span></div>
+  <div class="boot-line" style="animation-delay:1.05s">Loading Wireshark modules...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">[ OK ]</span></div>
+  <div class="boot-line" style="animation-delay:1.25s">Launching IDS/IPS (Snort)...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">[ OK ]</span></div>
+  <div class="boot-line" style="animation-delay:1.5s">Connecting to threat intelligence feed...&nbsp;&nbsp;&nbsp;&nbsp;<span class="info">[ -- ]</span></div>
+  <div class="boot-line" style="animation-delay:1.75s">Establishing secure shell...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">[ OK ]</span></div>
+  <div class="boot-line" style="animation-delay:2.05s; color:#00b4ff; font-size:15px; letter-spacing:2px; margin-top:8px;">└─$ Portfolio shell ready. Access granted.</div>
+  <div class="boot-bar-wrap">
+    <div class="boot-bar-label">Loading resources...</div>
+    <div class="boot-bar"><div class="boot-fill"></div></div>
+  </div>
+</div>
+
+<!-- LOCK OVERLAY -->
+<div id="lock-overlay">
+  <div class="lock-svg-wrap">
+    <svg class="lock-svg" id="lock-icon" viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg1" x1="0" y1="0" x2="80" y2="90" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#00b4ff"/>
+          <stop offset=".5" stop-color="#00e5cc"/>
+          <stop offset="1" stop-color="#39ff8a"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <rect x="10" y="38" width="60" height="44" rx="8" fill="rgba(0,180,255,.06)" stroke="url(#lg1)" stroke-width="2" filter="url(#glow)"/>
+      <g id="shackle" style="transform-origin:40px 38px">
+        <path d="M24 38 V24 C24 12.95 56 12.95 56 24 V38" stroke="url(#lg1)" stroke-width="2.5" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+      </g>
+      <circle cx="40" cy="57" r="6" fill="url(#lg1)" opacity=".7"/>
+      <rect x="37.5" y="57" width="5" height="9" rx="2.5" fill="url(#lg1)" opacity=".7"/>
+    </svg>
+    <div class="lock-text" id="lock-label">AUTHENTICATING...</div>
+  </div>
+</div>
+
+<!-- TERMINAL -->
+<div id="terminal-wrap">
+  <div class="title-bar">
+    <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+    <div class="title-txt">nikhil@kali: ~/portfolio — zsh</div>
+    <div class="status-pill">● ROOT</div>
+  </div>
+  <div id="output"></div>
+  <div class="input-bar">
+    <span class="prompt-label">
+      <span class="prompt-user">nikhil</span><span class="prompt-at">@</span><span class="prompt-host">kali</span><span class="prompt-colon">:</span><span class="prompt-path">~</span><span class="prompt-sym">$&nbsp;</span>
+    </span>
+    <input type="text" id="cmd-input" placeholder="type 'help' for available commands..." autocomplete="off" spellcheck="false"/>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// 3D BACKGROUND — Three.js-style with canvas API
+// ═══════════════════════════════════════
+const canvas = document.getElementById('bg-canvas');
+const ctx    = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── Floating 3D packet nodes ──
+const COLORS = ['#00b4ff','#00e5cc','#39ff8a','#7b5ea7','#0080cc'];
+
+class Packet {
+  constructor() { this.reset(true); }
+  reset(init=false) {
+    this.x  = Math.random() * W;
+    this.y  = init ? Math.random() * H : -20;
+    this.z  = 0.3 + Math.random() * 0.7;       // depth
+    this.vx = (Math.random() - .5) * .6 * this.z;
+    this.vy = (.4 + Math.random() * .6) * this.z;
+    this.size   = (2 + Math.random() * 3) * this.z;
+    this.color  = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.alpha  = .15 + Math.random() * .5;
+    this.shape  = Math.floor(Math.random() * 4); // 0=hex,1=diamond,2=square,3=circle
+    this.rot    = Math.random() * Math.PI * 2;
+    this.rotSpd = (Math.random() - .5) * .02;
+    this.tail   = [];
+  }
+  update() {
+    this.tail.unshift({x:this.x, y:this.y});
+    if (this.tail.length > 12) this.tail.pop();
+    this.x  += this.vx;
+    this.y  += this.vy;
+    this.rot += this.rotSpd;
+    if (this.y > H + 20 || this.x < -30 || this.x > W + 30) this.reset();
+  }
+  draw() {
+    // tail / trail
+    for (let i = 0; i < this.tail.length; i++) {
+      const a = (1 - i / this.tail.length) * this.alpha * .3;
+      ctx.beginPath();
+      ctx.arc(this.tail[i].x, this.tail[i].y, this.size * .5, 0, Math.PI * 2);
+      ctx.fillStyle = this.color + Math.floor(a * 255).toString(16).padStart(2,'0');
+      ctx.fill();
+    }
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    ctx.globalAlpha = this.alpha;
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth   = 1;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur  = 6 * this.z;
+    const s = this.size;
+    ctx.beginPath();
+    if (this.shape === 0) { // hexagon
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        i === 0 ? ctx.moveTo(Math.cos(a)*s, Math.sin(a)*s) : ctx.lineTo(Math.cos(a)*s, Math.sin(a)*s);
+      }
+      ctx.closePath(); ctx.stroke();
+    } else if (this.shape === 1) { // diamond
+      ctx.moveTo(0, -s*1.3); ctx.lineTo(s*.8, 0); ctx.lineTo(0, s*1.3); ctx.lineTo(-s*.8, 0);
+      ctx.closePath(); ctx.stroke();
+    } else if (this.shape === 2) { // square
+      ctx.strokeRect(-s, -s, s*2, s*2);
+    } else { // circle with crosshair
+      ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-s*1.4,0); ctx.lineTo(s*1.4,0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,-s*1.4); ctx.lineTo(0,s*1.4); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+}
+
+// ── Scrolling matrix-like hex strings ──
+class HexStream {
+  constructor() { this.reset(true); }
+  reset(init=false) {
+    this.x    = Math.random() * W;
+    this.y    = init ? Math.random() * H : -60;
+    this.speed= .8 + Math.random() * 1.2;
+    this.chars= this.genChars();
+    this.alpha= .06 + Math.random() * .1;
+    this.color= Math.random() > .5 ? '#00b4ff' : '#39ff8a';
+    this.size = 10 + Math.floor(Math.random() * 4);
+  }
+  genChars() {
+    const pool = '0123456789ABCDEF';
+    const len  = 4 + Math.floor(Math.random() * 8);
+    return Array.from({length:len}, ()=> pool[Math.floor(Math.random()*pool.length)]).join(' ');
+  }
+  update() {
+    this.y += this.speed;
+    if (Math.random() < .04) this.chars = this.genChars();
+    if (this.y > H + 80) this.reset();
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.fillStyle   = this.color;
+    ctx.font        = `${this.size}px 'Share Tech Mono', monospace`;
+    ctx.fillText(this.chars, this.x, this.y);
+    ctx.restore();
+  }
+}
+
+// ── 3D rotating wireframe cube (perspective projected) ──
+class WireframeCube {
+  constructor() { this.reset(true); }
+  reset(init=false) {
+    this.cx = Math.random() * W;
+    this.cy = init ? Math.random() * H : -80;
+    this.cz = 400 + Math.random() * 400;
+    this.vx = (Math.random()-.5) * .3;
+    this.vy = .4 + Math.random() * .5;
+    this.rx = Math.random() * Math.PI * 2;
+    this.ry = Math.random() * Math.PI * 2;
+    this.rz = Math.random() * Math.PI * 2;
+    this.drx = (Math.random()-.5) * .012;
+    this.dry = (Math.random()-.5) * .012;
+    this.drz = (Math.random()-.5) * .008;
+    this.size  = 20 + Math.random() * 30;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.alpha = .08 + Math.random() * .14;
+  }
+  project(px, py, pz) {
+    const fov = 400;
+    const z   = pz + this.cz;
+    const scale = fov / z;
+    return { x: this.cx + px * scale, y: this.cy + py * scale, s: scale };
+  }
+  rotPt(x, y, z) {
+    // rotate around X
+    let y1 = y*Math.cos(this.rx) - z*Math.sin(this.rx);
+    let z1 = y*Math.sin(this.rx) + z*Math.cos(this.rx);
+    // rotate around Y
+    let x2 = x*Math.cos(this.ry)  + z1*Math.sin(this.ry);
+    let z2 = -x*Math.sin(this.ry) + z1*Math.cos(this.ry);
+    // rotate around Z
+    let x3 = x2*Math.cos(this.rz) - y1*Math.sin(this.rz);
+    let y3 = x2*Math.sin(this.rz) + y1*Math.cos(this.rz);
+    return [x3, y3, z2];
+  }
+  update() {
+    this.cx += this.vx;
+    this.cy += this.vy;
+    this.rx += this.drx;
+    this.ry += this.dry;
+    this.rz += this.drz;
+    if (this.cy > H + 100) this.reset();
+  }
+  draw() {
+    const s = this.size;
+    const verts = [
+      [-s,-s,-s],[ s,-s,-s],[ s, s,-s],[-s, s,-s],
+      [-s,-s, s],[ s,-s, s],[ s, s, s],[-s, s, s],
+    ].map(([x,y,z]) => {
+      const [rx,ry,rz] = this.rotPt(x,y,z);
+      return this.project(rx, ry, rz);
+    });
+    const edges = [
+      [0,1],[1,2],[2,3],[3,0], // back
+      [4,5],[5,6],[6,7],[7,4], // front
+      [0,4],[1,5],[2,6],[3,7], // sides
+    ];
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth   = .8;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur  = 8;
+    edges.forEach(([a,b]) => {
+      ctx.beginPath();
+      ctx.moveTo(verts[a].x, verts[a].y);
+      ctx.lineTo(verts[b].x, verts[b].y);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+}
+
+// ── Connection lines (network graph) ──
+class NetNode {
+  constructor() { this.reset(true); }
+  reset(init=false) {
+    this.x  = Math.random() * W;
+    this.y  = init ? Math.random() * H : Math.random() * H;
+    this.vx = (Math.random()-.5) * .3;
+    this.vy = (Math.random()-.5) * .3;
+    this.r  = 2 + Math.random() * 2;
+    this.color = Math.random() > .5 ? '#00b4ff' : '#39ff8a';
+    this.alpha = .15 + Math.random() * .2;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x<0||this.x>W) this.vx*=-1;
+    if (this.y<0||this.y>H) this.vy*=-1;
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.fillStyle   = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur  = 8;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ── init objects ──
+const packets  = Array.from({length:35},  ()=>new Packet());
+const streams  = Array.from({length:20},  ()=>new HexStream());
+const cubes    = Array.from({length:8},   ()=>new WireframeCube());
+const netNodes = Array.from({length:28},  ()=>new NetNode());
+
+function drawConnections() {
+  for (let i = 0; i < netNodes.length; i++) {
+    for (let j = i+1; j < netNodes.length; j++) {
+      const dx = netNodes[i].x - netNodes[j].x;
+      const dy = netNodes[i].y - netNodes[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 150) {
+        const a = (1 - dist/150) * .07;
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.strokeStyle = '#00b4ff';
+        ctx.lineWidth   = .5;
+        ctx.beginPath();
+        ctx.moveTo(netNodes[i].x, netNodes[i].y);
+        ctx.lineTo(netNodes[j].x, netNodes[j].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+}
+
+function animBg() {
+  ctx.clearRect(0, 0, W, H);
+
+  // subtle bg gradient
+  const grad = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)/1.5);
+  grad.addColorStop(0, 'rgba(0,20,40,0.92)');
+  grad.addColorStop(1, 'rgba(0,0,8,0.98)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+
+  streams.forEach(s=>{s.update();s.draw();});
+  netNodes.forEach(n=>{n.update();});
+  drawConnections();
+  netNodes.forEach(n=>n.draw());
+  cubes.forEach(c=>{c.update();c.draw();});
+  packets.forEach(p=>{p.update();p.draw();});
+
+  requestAnimationFrame(animBg);
+}
+animBg();
+
+// ═══════════════════════════════════════
+// CURSOR
+// ═══════════════════════════════════════
+const curEl  = document.getElementById('cursor');
+const ringEl = document.getElementById('cring');
+document.addEventListener('mousemove', e => {
+  curEl.style.left  = e.clientX + 'px';
+  curEl.style.top   = e.clientY + 'px';
+  setTimeout(()=>{
+    ringEl.style.left = e.clientX + 'px';
+    ringEl.style.top  = e.clientY + 'px';
+  }, 90);
+});
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+setTimeout(()=>document.getElementById('boot').classList.add('done'), 100);
+setTimeout(showWelcome, 4800);
+
+// ═══════════════════════════════════════
+// LOCK ANIMATION
+// ═══════════════════════════════════════
+const lockOverlay = document.getElementById('lock-overlay');
+const shackle     = document.getElementById('shackle');
+const lockLabel   = document.getElementById('lock-label');
+const lockSVG     = document.getElementById('lock-icon');
+
+function playLockUnlock() {
+  return new Promise(resolve => {
+    lockOverlay.style.opacity = '1';
+    lockOverlay.classList.add('active');
+    lockSVG.style.cssText   = '';
+    shackle.style.cssText   = 'transform-origin:40px 38px';
+    lockLabel.style.cssText = '';
+    lockSVG.style.animation = 'lockAppear .42s cubic-bezier(.175,.885,.32,1.275) forwards';
+    setTimeout(()=>{
+      lockLabel.style.animation = 'labelIn .28s forwards';
+      lockLabel.textContent     = 'AUTHENTICATING...';
+    }, 360);
+    setTimeout(()=>{
+      lockSVG.style.animation = 'lockGlow 1s infinite';
+      shackle.style.transition= 'transform .5s cubic-bezier(.68,-.55,.265,1.55)';
+      shackle.style.transform = 'rotate(-40deg) translateY(-6px)';
+      lockLabel.textContent   = 'ACCESS GRANTED';
+      lockLabel.style.color   = '#39ff8a';
+      lockLabel.style.textShadow = '0 0 12px #39ff8a';
+    }, 780);
+    setTimeout(()=>{
+      lockSVG.style.animation  = 'lockFadeOut .5s forwards';
+      lockLabel.style.animation= 'lockFadeOut .5s .08s forwards';
+    }, 1300);
+    setTimeout(()=>{
+      lockOverlay.style.opacity='0';
+      lockOverlay.classList.remove('active');
+      lockLabel.style.color='';
+      lockLabel.style.textShadow='';
+      resolve();
+    }, 1850);
+  });
+}
+
+function spawnRipple() {
+  const cx=window.innerWidth/2, cy=window.innerHeight/2;
+  [0,1,2].forEach(i=>{
+    setTimeout(()=>{
+      const r=document.createElement('div');
+      r.className='ripple-ring';
+      const sz=40+i*24;
+      r.style.cssText=`width:${sz}px;height:${sz}px;left:${cx}px;top:${cy}px;animation-duration:${.8+i*.15}s;animation-delay:${i*.08}s`;
+      document.body.appendChild(r);
+      setTimeout(()=>r.remove(),1300);
+    },i*60);
+  });
+}
+function spawnGridFlash(){
+  const f=document.createElement('div');f.className='grid-flash';
+  document.body.appendChild(f);setTimeout(()=>f.remove(),600);
+}
+
+// ═══════════════════════════════════════
+// OUTPUT HELPERS
+// ═══════════════════════════════════════
+const output = document.getElementById('output');
+const input  = document.getElementById('cmd-input');
+let cmdHistory=[], histIdx=-1;
+
+function addLine(html, cls='info', delay=0){
+  return new Promise(res=>{
+    setTimeout(()=>{
+      const d=document.createElement('div');
+      d.className='line '+cls; d.innerHTML=html;
+      output.appendChild(d); output.scrollTop=output.scrollHeight; res();
+    },delay);
+  });
+}
+
+function addHero(){
+  const d=document.createElement('div'); d.className='hero-card';
+  d.innerHTML=`
+    <div class="hero-avatar">
+      <img src="nikhil.jpg" alt="Nikhil" onerror="this.style.display='none'"/>
+    </div>
+    <div class="hero-info">
+      <div class="hero-name">NIKHIL BEJJARAPU</div>
+      <div class="hero-role">Cybersecurity Analyst &nbsp;·&nbsp; APM &nbsp;·&nbsp; Observability</div>
+      <div class="hero-meta">📍 Jersey City, NJ &nbsp;|&nbsp; 📧 nikhilbejjarapu369@gmail.com &nbsp;|&nbsp; 📞 (316) 313-8486</div>
+      <div class="hero-badges">
+        <span class="badge b1">MS Cybersecurity</span>
+        <span class="badge b2">Dynatrace APM</span>
+        <span class="badge b3">SIEM Analysis</span>
+        <span class="badge b4">Dynatrace Associate ✦</span>
+        <span class="badge b1">MITRE ATT&amp;CK</span>
+        <span class="badge b2">NIST · ISO 27001</span>
+      </div>
+    </div>`;
+  output.appendChild(d); output.scrollTop=output.scrollHeight;
+}
+
+function addCard(title,sub,bullets,delay=0){
+  return new Promise(res=>{
+    setTimeout(()=>{
+      const d=document.createElement('div'); d.className='card';
+      d.innerHTML=`
+        <div class="card-title">${title}</div>
+        <div class="card-sub">${sub}</div>
+        <div class="card-body"><ul>${bullets.map(b=>`<li>${b}</li>`).join('')}</ul></div>`;
+      output.appendChild(d);
+      requestAnimationFrame(()=>d.classList.add('anim'));
+      output.scrollTop=output.scrollHeight; res();
+    },delay);
+  });
+}
+
+// ═══════════════════════════════════════
+// COMMANDS
+// ═══════════════════════════════════════
+async function cmdHelp(){
+  await addLine('// AVAILABLE COMMANDS','section-header');
+  const cmds=[
+    ['about','Professional summary & who I am'],
+    ['experience','Work history & roles'],
+    ['skills','Technical skills & tools'],
+    ['projects','Featured projects'],
+    ['education','Academic background'],
+    ['certifications','Certifications & achievements'],
+    ['contact','Get in touch'],
+    ['whoami','Quick identity check'],
+    ['clear','Clear the terminal'],
+    ['help','Show this help menu'],
+  ];
+  const t=document.createElement('div'); t.className='cmd-table';
+  cmds.forEach(([name,desc],i)=>{
+    const r=document.createElement('div');
+    r.className='cmd-row'; r.style.animationDelay=(i*.05)+'s';
+    r.innerHTML=`<span class="cmd-name">$ ${name}</span><span class="cmd-desc">— ${desc}</span>`;
+    t.appendChild(r);
+  });
+  output.appendChild(t); output.scrollTop=output.scrollHeight;
+}
+
+async function cmdAbout(){
+  await addLine('// ABOUT ME','section-header');
+  await addLine(`I'm a <span style="color:var(--kblue);font-weight:700">Cybersecurity Analyst</span> with enterprise-grade experience in Dynatrace APM, security monitoring, SIEM analysis, and vulnerability management.`,'info',50);
+  await addLine('','blank');
+  await addLine(`Skilled in <span style="color:var(--kcyan);font-weight:600">log analysis</span>, <span style="color:var(--kcyan);font-weight:600">distributed tracing</span>, <span style="color:var(--kcyan);font-weight:600">TCP/IP networking</span>, Linux security, and Python automation.`,'info',100);
+  await addLine('','blank');
+  await addLine('Hands-on with incident detection, root cause analysis (RCA), and supporting cybersecurity operations across enterprise environments.','mid',150);
+}
+
+async function cmdExperience(){
+  await addLine('// WORK EXPERIENCE','section-header');
+  await addCard('Cybersecurity Intern','Raqmiyat LLC · Dubai, UAE · Feb 2026 – Present',[
+    'Monitor enterprise apps & infrastructure using Dynatrace for performance, availability & security insights',
+    'Analyze logs, metrics & distributed traces to detect anomalies and support incident response',
+    'Perform Root Cause Analysis (RCA) to resolve bottlenecks and reduce downtime',
+    'Support vulnerability management and risk assessment processes',
+    'Collaborate with DevOps & IT teams to enhance system reliability and security posture',
+  ],50);
+  await addCard('IT Technical Consultant','Raqmiyat LLC · Dubai, UAE · Feb 2023 – Apr 2023',[
+    'Delivered L1/L2 support for Linux & Windows resolving TCP/IP, DNS, and LAN/WAN issues',
+    'Monitored server performance and analyzed logs to maintain infrastructure stability',
+    'Administered Linux user accounts, SSH access & Active Directory with secure access control',
+    'Performed patch management & incident resolution via ServiceNow in enterprise SLA environments',
+  ],250);
+}
+
+async function cmdSkills(){
+  await addLine('// TECHNICAL SKILLS','section-header');
+  const grid=document.createElement('div'); grid.className='skill-grid';
+  [
+    {title:'Cybersecurity Tools',tags:['Wireshark','Nmap','Zeek','Snort IDS/IPS','VirusTotal','Cisco Talos','Sentinel']},
+    {title:'Frameworks',         tags:['MITRE ATT&CK','NIST CSF','ISO/IEC 27001','OWASP','CIS Controls v8.1']},
+    {title:'Networking & IT',    tags:['TCP/IP','IP Addressing','Subnetting','Network Monitoring','Intrusion Detection']},
+    {title:'Observability & APM',tags:['Dynatrace APM','Infrastructure Monitoring','Distributed Tracing','RCA','DQL']},
+    {title:'Languages',          tags:['Python Automation','Dynatrace Query Language','Bash Scripting']},
+    {title:'Platforms',          tags:['Linux','Windows Server','Active Directory','ServiceNow','SSH']},
+  ].forEach(g=>{
+    const d=document.createElement('div'); d.className='skill-group';
+    d.innerHTML=`<div class="skill-group-title">${g.title}</div>${g.tags.map(t=>`<span class="skill-tag">${t}</span>`).join('')}`;
+    grid.appendChild(d);
+  });
+  output.appendChild(grid); output.scrollTop=output.scrollHeight;
+}
+
+async function cmdProjects(){
+  await addLine('// PROJECTS','section-header');
+  await addCard('IoT23 Anomaly Sentinel','Sep 2025 – Dec 2025 · Solo Project',[
+    'Built IoT threat detection using Isolation Forest & DBSCAN — 95.4% accuracy, 4.2% false positives, 90ms response',
+    'Developed full-stack app (React, Node.js, TensorFlow) with AES-256 encryption & RBAC',
+    'Integrated OSINT-powered real-time risk scoring engine',
+    'Mapped against NIST CSF 2.0, CIS Controls v8.1, MITRE ATT&CK with AI Copilot for automated incident response',
+  ],50);
+  await addCard('Modelling & Predicting Cyber Hacking Breaches','Jan 2023 – Jul 2023 · Team Project',[
+    'Real-time IoT threat detection with Isolation Forest, DBSCAN & TSIM models (NIST CSF 2.0 compliant)',
+    'Led vulnerability prioritization approach; mentored teammates on Python scripting',
+    'Built automated Python scripts reducing incident response time by 20%',
+  ],260);
+}
+
+async function cmdEducation(){
+  await addLine('// EDUCATION','section-header');
+  await addCard('M.S. in Cybersecurity','Yeshiva University · New York · Graduated Dec 2025',['Focus on security operations, threat detection, and network security'],50);
+  await addCard('B.Tech in Computer Science','JITS · India · Graduated Jul 2023',['Foundation in programming, algorithms, networking, and systems'],200);
+}
+
+async function cmdCertifications(){
+  await addLine('// CERTIFICATIONS','section-header');
+  await addLine('','blank');
+  await addLine(`<span style="color:var(--kyellow)">✦</span>&nbsp; <span style="color:var(--kblue);font-weight:700">Dynatrace Associate Certification</span>`,'info',50);
+  await addLine('&nbsp;&nbsp;&nbsp;Validates expertise in Dynatrace APM, observability, distributed tracing &amp; DQL.','mid',110);
+  await addLine('','blank',150);
+  await addLine(`<span style="color:var(--kyellow)">✦</span>&nbsp; <span style="color:var(--kgreen);font-weight:700">CompTIA Security+</span>`,'info',200);
+  await addLine('&nbsp;&nbsp;&nbsp;Covers threat detection, network security, cryptography, and risk management fundamentals.','mid',260);
+  await addLine('','blank',300);
+  await addLine(`<span style="color:var(--kyellow)">✦</span>&nbsp; <span style="color:var(--kcyan);font-weight:700">Network Analysis — Security Blue Team</span>`,'info',350);
+  await addLine('&nbsp;&nbsp;&nbsp;Hands-on network traffic analysis, packet inspection, and intrusion detection techniques.','mid',410);
+  await addLine('','blank',460);
+  await addLine('Frameworks studied &amp; applied:','mid',500);
+  await addLine(`&nbsp;&nbsp;<span style="color:var(--kcyan)">MITRE ATT&amp;CK</span>&nbsp;·&nbsp;<span style="color:var(--kgreen)">NIST CSF 2.0</span>&nbsp;·&nbsp;<span style="color:var(--kblue)">ISO/IEC 27001</span>&nbsp;·&nbsp;<span style="color:var(--kyellow)">CIS Controls v8.1</span>`,'info',560);
+}
+
+async function cmdContact(){
+  await addLine('// CONTACT','section-header');
+  const grid=document.createElement('div'); grid.className='contact-grid';
+  [['Email','nikhilbejjarapu369@gmail.com'],['Phone','(316) 313-8486'],['Location','Jersey City, NJ'],['LinkedIn','linkedin.com/in/nikhilbejjarapu']].forEach(([l,v])=>{
+    const d=document.createElement('div'); d.className='contact-item';
+    d.innerHTML=`<span class="contact-label">${l}</span><span class="contact-val">${v}</span>`;
+    grid.appendChild(d);
+  });
+  output.appendChild(grid);
+  await addLine('','blank',100);
+  await addLine('Open to cybersecurity, APM, and support engineering roles. Feel free to reach out!','success',160);
+  output.scrollTop=output.scrollHeight;
+}
+
+async function cmdClear(){
+  output.innerHTML='';
+  await addLine(`Terminal cleared. Type <span style="color:var(--kcyan);font-weight:600">help</span> to get started.`,'mid');
+}
+
+async function cmdWhoami(){
+  await addLine('nikhil@kali','success');
+  await addLine('Role: Cybersecurity Analyst &amp; APM Specialist','mid',60);
+  await addLine('Status: Open to opportunities &nbsp;·&nbsp; Jersey City, NJ','mid',120);
+}
+
+const commands={
+  help:cmdHelp,about:cmdAbout,experience:cmdExperience,
+  skills:cmdSkills,projects:cmdProjects,education:cmdEducation,
+  certifications:cmdCertifications,contact:cmdContact,
+  clear:cmdClear,whoami:cmdWhoami
+};
+
+async function showWelcome(){
+  const ascii=`
+  ███╗   ██╗██╗██╗  ██╗██╗  ██╗██╗██╗     
+  ████╗  ██║██║██║ ██╔╝██║  ██║██║██║     
+  ██╔██╗ ██║██║█████╔╝ ███████║██║██║     
+  ██║╚██╗██║██║██╔═██╗ ██╔══██║██║██║     
+  ██║ ╚████║██║██║  ██╗██║  ██║██║███████╗
+  ╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝`;
+  const d=document.createElement('div');
+  d.className='ascii-art'; d.textContent=ascii;
+  output.appendChild(d);
+  await addLine('','blank',200);
+  addHero();
+  await addLine('','blank',350);
+  await addLine('Welcome to my interactive terminal portfolio.','success',450);
+  await addLine(`Type <span style="color:var(--kcyan);font-weight:600">help</span> to see all available commands.`,'mid',600);
+  await addLine('','blank',700);
+  input.focus();
+}
+
+async function processCommand(raw){
+  const cmd=raw.trim().toLowerCase();
+  if(!cmd) return;
+  cmdHistory.unshift(raw); histIdx=-1;
+
+  input.disabled=true;
+  spawnRipple(); spawnGridFlash();
+  await playLockUnlock();
+  input.disabled=false; input.focus();
+
+  await addLine(`<span class="prompt-user">nikhil</span><span style="color:var(--text-mid)">@</span><span class="prompt-host">kali</span><span style="color:var(--text-mid)">:</span><span style="color:var(--kblue)">~</span><span style="color:var(--text)">$</span>&nbsp;${raw}`,'cmd');
+
+  if(commands[cmd]){
+    await commands[cmd]();
+  } else {
+    await addLine(`zsh: command not found: <span style="color:var(--kred);font-weight:600">${cmd}</span> — try <span style="color:var(--kcyan);font-weight:600">help</span>`,'err');
+  }
+  await addLine('','blank');
+}
+
+input.addEventListener('keydown', async e=>{
+  if(e.key==='Enter'){
+    const v=input.value; input.value='';
+    await processCommand(v);
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    if(histIdx<cmdHistory.length-1){histIdx++;input.value=cmdHistory[histIdx];}
+  } else if(e.key==='ArrowDown'){
+    e.preventDefault();
+    if(histIdx>0){histIdx--;input.value=cmdHistory[histIdx];}
+    else{histIdx=-1;input.value='';}
+  } else if(e.key==='Tab'){
+    e.preventDefault();
+    const p=input.value.toLowerCase();
+    const m=Object.keys(commands).find(c=>c.startsWith(p));
+    if(m) input.value=m;
+  }
+});
+
+document.addEventListener('click',()=>input.focus());
+</script>
+</body>
+</html>
